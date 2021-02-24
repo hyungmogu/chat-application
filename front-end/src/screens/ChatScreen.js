@@ -25,7 +25,7 @@ const ChatInputSection = styled.section`
 `;
 
 const QUERY = gql`
-  {
+  query {
     users {
       id,
       username
@@ -40,10 +40,41 @@ const QUERY = gql`
   }
 `;
 
+const NEW_CHAT_SUBSCRIPTION = gql`
+  subscription {
+    newChat {
+      id
+      texts
+      postedBy {
+        id
+        username
+      }
+    }
+  }
+`;
+
 function ChatScreen() {
-    const { data } = useQuery(QUERY);
+    const { data, subscribeToMore } = useQuery(QUERY);
     const chats = data && data.chats ? data.chats : [];
     const users = data && data.users ? data.users : [];
+
+    subscribeToMore({
+      document: NEW_CHAT_SUBSCRIPTION,
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData.data) return prev;
+        const newChat = subscriptionData.data.newChat;
+        console.log(prev);
+        const exists = prev.chats.find(
+          ({ id }) => id === newChat.id
+        );
+        if (exists) return prev;
+
+        return Object.assign({}, prev, {
+          chats: [...prev.chats, newChat],
+          users: prev.users
+        });
+      }
+    });
 
     return (
       <>
