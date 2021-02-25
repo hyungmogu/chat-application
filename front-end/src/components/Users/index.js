@@ -18,6 +18,34 @@ export function UserList(props) {
         height: calc(100vh - ${mobileNavigationHeight});
         width: 15em;
         box-shadow: 2px 0px ${colorGrey};
+        display: none;
+
+        @media only screen and (min-width: 850px) {
+            display: initial;
+        }
+    `;
+    return (
+        <Ul>
+            {userList}
+        </Ul>
+    );
+}
+
+export function UserListMobile(props) {
+    const username = localStorage.getItem("USERNAME");
+    const userList = props.users.map(user => <User key={user.id} {...user} isOwner={username === user.username}/>);
+    const Ul = styled.ul`
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        height: calc(100vh - ${mobileNavigationHeight});
+        width: 15em;
+        box-shadow: 2px 0px ${colorGrey};
+        display: ${props.toggled ? "initial" : "none"};
+
+        @media only screen and (min-width: 850px) {
+            display: none;
+        }
     `;
     return (
         <Ul>

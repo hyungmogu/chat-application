@@ -37,11 +37,34 @@ const server = new ApolloServer({
           ? getUserId(req)
           : null
     };
+  },
+  subscriptions: {
+    onConnect: (connectionParams) => {
+      if (connectionParams.authToken) {
+        return {
+          prisma,
+          userId: getUserId(
+            null,
+            connectionParams.authToken
+          )
+        };
+      } else {
+        return {
+          prisma
+        };
+      }
+    },
+    onDisconnect: (webSocket, context) => {
+      webSocket.close();
+      console.log('Websocket Disconnected')
+    },
   }
 });
 
 server
-  .listen()
+  .listen(process.env.PORT)
   .then(({ url }) =>
     console.log(`Server is running on ${url}`)
 );
+
+// .listen(process.env.PORT)

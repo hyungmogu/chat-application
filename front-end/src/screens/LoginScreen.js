@@ -114,10 +114,12 @@ function LoginScreen() {
       password: password,
     },
     onCompleted: ({ login }) => {
-      console.log(login);
       localStorage.setItem("AUTH_TOKEN", login.token);
       localStorage.setItem("USERNAME", login.user.username);
       history.push('/chat');
+    },
+    onError: (e) => {
+      console.log(e);
     }
   });
 

@@ -14,10 +14,8 @@ import {
   split
 } from '@apollo/client';
 
-
-
 const httpLink = createHttpLink({
-  uri: 'http://localhost:4000/'
+  uri: 'https://chat-application-hyungmogu.herokuapp.com/'
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -31,7 +29,7 @@ const authLink = setContext((_, { headers }) => {
 });
 
 const wsLink = new WebSocketLink({
-  uri: `ws://localhost:4000/graphql`,
+  uri: `wss://chat-application-hyungmogu.herokuapp.com/graphql`,
   options: {
     reconnect: true,
     connectionParams: {

@@ -17,9 +17,10 @@ async function post(parent, args, context) {
 
 async function signup(parent, args, context) {
     const password = await bcrypt.hash(args.password, 10)
-    const user = await context.prisma.user.create({ data: { ...args, password } })
+    const user = await context.prisma.user.create({ data: { ...args, password, loggedIn: true } })
     const token = jwt.sign({ userId: user.id }, APP_SECRET)
 
+    context.pubsub.publish("NEW_PARTICIPANT", user);
     return {
       token,
       user,
@@ -34,19 +35,55 @@ async function login(parent, args, context) {
 
     const valid = await bcrypt.compare(args.password, user.password)
     if (!valid) {
-      throw new Error('Invalid password')
+      throw new Error('Invalid password');
     }
 
-    const token = jwt.sign({ userId: user.id }, APP_SECRET)
+    const token = jwt.sign({ userId: user.id }, APP_SECRET);
 
+    await context.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        loggedIn: true
+      }
+    });
+
+    context.pubsub.publish("NEW_PARTICIPANT", user);
     return {
       token,
       user,
     }
 }
 
+async function logout(parent, args, context) {
+  const { userId } = context;
+  const user = await context.prisma.user.findUnique({ where: { id: userId } })
+
+  if (!user) {
+    throw new Error('No such user found')
+  }
+
+  if (!user.loggedIn) {
+    return user;
+  }
+
+  await context.prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      loggedIn: false
+    }
+  });
+
+  context.pubsub.publish("REMOVE_PARTICIPANT", user);
+  return user;
+}
+
 module.exports = {
     post,
     signup,
     login,
+    logout,
 }
